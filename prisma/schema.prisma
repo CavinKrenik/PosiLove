@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../dev.db"
+}
+
+generator client {
+  provider = "prisma-client"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password_hash String
+  geo_location  String?   // "lat,long"
+  bio           String?
+  age           Int?
+  gender        String?
+  preferences   String?   // JSON stringified or supported JSON type if supported by DB (SQLite handles string mostly)
+  isPremium     Boolean   @default(true)
+  
+  profile       Profile?
+  sentSwipes    Swipes[]  @relation("SentSwipes")
+  receivedSwipes Swipes[] @relation("ReceivedSwipes")
+  sentMessages  Messages[] @relation("SentMessages")
+  
+  matchesAsA    Matches[] @relation("UserA")
+  matchesAsB    Matches[] @relation("UserB")
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  photos    String   // JSON stringified array of URLs
+  interests String   // JSON stringified array of strings
+}
+
+model Swipes {
+  id        String   @id @default(uuid())
+  actorId   String
+  targetId  String
+  action    String   // LIKE, PASS, SUPERLIKE
+  timestamp DateTime @default(now())
+
+  actor     User     @relation("SentSwipes", fields: [actorId], references: [id])
+  target    User     @relation("ReceivedSwipes", fields: [targetId], references: [id])
+}
+
+model Matches {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+
+  userA     User     @relation("UserA", fields: [userAId], references: [id])
+  userB     User     @relation("UserB", fields: [userBId], references: [id])
+  messages  Messages[]
+}
+
+model Messages {
+  id        String   @id @default(uuid())
+  matchId   String
+  senderId  String
+  content   String
+  timestamp DateTime @default(now())
+
+  match     Matches  @relation(fields: [matchId], references: [id])
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+}

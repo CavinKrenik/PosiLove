@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-posi-pink: #F25A8C;
+  --color-posi-coral: #FF9472;
+  --color-posi-gold: #FFC857;
+  --color-posi-plum: #311847;
+  --color-bg-dark: #050509;
+  --color-bg-light: #FFF8FB;
+  --color-card-bg: #F8ECFF;
+  --color-border-subtle: #E4D4F5;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: var(--color-bg-dark);
+  --foreground: var(--color-bg-light);
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+  min-height: 100vh;
+  /* 
+    Updated Global Background (v3):
+    - Deep dark base (#050509)
+    - Very subtle top spotlight (opacity 0.25) to avoid washing out white text
+    - Global text shadow for readability
+  */
+  background: radial-gradient(circle at 50% -10%,
+      rgba(242, 90, 140, 0.25) 0%,
+      rgba(5, 5, 9, 1) 40%);
+  background-attachment: fixed;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-posi-pink via-posi-coral to-posi-gold drop-shadow-sm;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-posi-pink via-posi-coral to-posi-gold text-posi-plum font-bold shadow-lg shadow-posi-pink/20 hover:scale-105 hover:shadow-xl hover:shadow-posi-pink/30 hover:brightness-110 transition-all duration-300 text-shadow-none;
+  }
+
+  /* Glass Nav: Darker and more blurry */
+  .glass-nav {
+    @apply bg-posi-plum/80 backdrop-blur-xl border-b border-white/5 shadow-2xl;
+  }
+
+  .container-custom {
+    @apply max-w-[1120px] mx-auto px-6 relative;
+  }
+
+  /* Cards: Dark glass effect */
+  .card-base {
+    @apply bg-posi-plum/40 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-xl transition-all duration-300;
+  }
+}
