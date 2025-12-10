@@ -1,11 +1,46 @@
 'use client';
 
-import { ArrowLeft, BookOpen, Heart, Shield, LifeBuoy } from 'lucide-react';
+import { ArrowLeft, BookOpen, Heart, Shield, LifeBuoy, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
+const STI_DATA = [
+    {
+        category: "Bacterial STIs (Often Curable)",
+        color: "text-posi-gold",
+        items: [
+            { name: "Chlamydia", desc: "Very common, often asymptomatic." },
+            { name: "Gonorrhea", desc: "Can affect genitals, rectum, throat; resistance is a concern." },
+            { name: "Syphilis", desc: "Progresses in stages, can be serious if untreated." },
+            { name: "Mycoplasma genitalium (Mgen)", desc: "A newer bacterial STI." },
+            { name: "Chancroid", desc: "Causes painful genital sores." }
+        ]
+    },
+    {
+        category: "Viral STIs (Manageable, Often Lifelong)",
+        color: "text-posi-pink",
+        items: [
+            { name: "HIV/AIDS", desc: "Attacks immune system. Treatment allows for long, healthy life (U=U)." },
+            { name: "Herpes (HSV)", desc: "Causes painful sores/blisters. Very common." },
+            { name: "HPV", desc: "Can cause genital warts or cancer; vaccines available." },
+            { name: "Hepatitis B & C", desc: "Affects the liver; Hep B vaccine exists." },
+            { name: "Mpox", desc: "Outbreaks have shown sexual transmission." }
+        ]
+    },
+    {
+        category: "Parasitic STIs (Often Curable)",
+        color: "text-posi-coral",
+        items: [
+            { name: "Trichomoniasis", desc: "Common, caused by a parasite." },
+            { name: "Pubic Lice (Crabs)", desc: "Tiny insects in the pubic hair area." },
+            { name: "Scabies", desc: "Mites causing intense itching." }
+        ]
+    }
+];
+
 const SECTIONS = [
     { id: 'basics', label: 'The Basics', icon: BookOpen },
+    { id: 'stis', label: 'STI Guide', icon: Info },
     { id: 'dating', label: 'Dating Tips', icon: Heart },
     { id: 'consent', label: 'Consent', icon: Shield },
     { id: 'support', label: 'Support', icon: LifeBuoy },
@@ -95,6 +130,28 @@ export default function EducationPage() {
                                 <li>Most people carry some form of HSV/HPV unknowingly.</li>
                             </ul>
                         </div>
+                    </div>
+                </section>
+
+                {/* STI GUIDE SECTION */}
+                <section id="stis" className="scroll-mt-40">
+                    <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
+                        <Info className="w-8 h-8 text-blue-400" /> Common Conditions
+                    </h2>
+                    <div className="space-y-8">
+                        {STI_DATA.map((group, idx) => (
+                            <div key={idx} className="card-base p-6 border-l-4 border-white/20">
+                                <h3 className={`text-xl font-bold mb-4 ${group.color}`}>{group.category}</h3>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    {group.items.map((item) => (
+                                        <div key={item.name} className="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors">
+                                            <span className="font-bold text-white block">{item.name}</span>
+                                            <span className="text-sm text-posi-light/70">{item.desc}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </section>
 

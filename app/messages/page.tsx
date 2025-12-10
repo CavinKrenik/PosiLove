@@ -3,6 +3,7 @@
 import { ArrowLeft, MoreVertical, Send, Phone, Video, ShieldCheck, Image as ImageIcon, X, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import clsx from 'clsx';
 
 const MOCK_CHATS = [
     { id: 1, name: 'Sarah', lastMessage: 'That hike looks amazing! 🏔️', time: '2m', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80', active: true },
@@ -11,13 +12,30 @@ const MOCK_CHATS = [
 
 export default function MessagesPage() {
     const [activeChat, setActiveChat] = useState<number | null>(null);
+    const [isPhotoAccepted, setIsPhotoAccepted] = useState(false);
+    const [isPhotoRevealed, setIsPhotoRevealed] = useState(false);
+    const [showSafetyBanner, setShowSafetyBanner] = useState(true);
 
     if (activeChat) {
         const chat = MOCK_CHATS.find(c => c.id === activeChat);
         return (
             <div className="flex flex-col h-screen bg-white">
+
+                {/* Safety Sticky Banner */}
+                {showSafetyBanner && (
+                    <div className="bg-posi-plum text-white px-4 py-2 text-xs flex justify-between items-center sticky top-0 z-50 shadow-md">
+                        <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-3 h-3 text-posi-gold" />
+                            <span className="font-medium">Safety Tip: Keep conversations on the app until you trust them. Consent can be withdrawn at any time.</span>
+                        </div>
+                        <button onClick={() => setShowSafetyBanner(false)} className="hover:text-posi-pink transition-colors">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
                 {/* Chat Header */}
-                <header className="flex items-center p-4 shadow-sm border-b sticky top-0 bg-white z-10 border-posi-subtle">
+                <header className="flex items-center p-4 shadow-sm border-b sticky top-[33px] bg-white z-40 border-posi-subtle">
                     <button onClick={() => setActiveChat(null)} className="mr-4 text-posi-plum hover:text-black">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
@@ -39,7 +57,7 @@ export default function MessagesPage() {
                 </header>
 
                 {/* Chat Area */}
-                <main className="flex-grow p-4 overflow-y-auto space-y-4 bg-posi-light">
+                <main className="flex-grow p-4 overflow-y-auto space-y-4 bg-posi-light pb-20">
 
                     {/* Safety System Message */}
                     <div className="flex flex-col gap-2 items-center my-4">
@@ -47,7 +65,6 @@ export default function MessagesPage() {
                             <ShieldCheck className="w-3 h-3" />
                             <span>Detailed health info is kept private. Focus on the connection!</span>
                         </div>
-                        {/* NEW: Consent Tip */}
                         <div className="text-[10px] text-gray-400 italic text-center max-w-xs">
                             “Ask before sharing details. Check in about comfort levels. Consent is a conversation.”
                         </div>
@@ -72,29 +89,57 @@ export default function MessagesPage() {
                         </div>
                     </div>
 
-                    {/* CONSENT MOCK: Photo Request */}
+                    {/* CONSENT MOCK: Photo Request Logic */}
                     <div className="flex items-end max-w-[90%] md:max-w-[70%]">
                         <img src={chat?.avatar} className="w-8 h-8 rounded-full object-cover mr-2 mb-1" />
-                        <div className="bg-gray-50 border border-gray-200 p-1 rounded-2xl rounded-bl-sm w-full overflow-hidden">
-                            <div className="bg-white p-3 rounded-xl border border-gray-100 mb-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <ImageIcon className="w-4 h-4 text-posi-pink" />
-                                    <span className="text-sm font-bold text-posi-plum">Photo Request</span>
+
+                        {!isPhotoAccepted ? (
+                            <div className="bg-gray-50 border border-gray-200 p-1 rounded-2xl rounded-bl-sm w-full overflow-hidden transition-all duration-300">
+                                <div className="bg-white p-3 rounded-xl border border-gray-100 mb-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <ImageIcon className="w-4 h-4 text-posi-pink" />
+                                        <span className="text-sm font-bold text-posi-plum">Photo Request</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-3">
+                                        {chat?.name} wants to send a photo. Do you accept?
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setIsPhotoAccepted(true)}
+                                            className="flex-1 bg-black text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-gray-800 transition-colors"
+                                        >
+                                            <Check className="w-3 h-3" /> Accept
+                                        </button>
+                                        <button className="flex-1 bg-gray-100 text-gray-600 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-gray-200 transition-colors">
+                                            <X className="w-3 h-3" /> Decline
+                                        </button>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mb-3">
-                                    {chat?.name} wants to send a photo. Do you accept?
-                                </p>
-                                <div className="flex gap-2">
-                                    <button className="flex-1 bg-black text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-gray-800">
-                                        <Check className="w-3 h-3" /> Accept
-                                    </button>
-                                    <button className="flex-1 bg-gray-100 text-gray-600 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-gray-200">
-                                        <X className="w-3 h-3" /> Decline
-                                    </button>
+                                <p className="text-[10px] text-center text-gray-400 py-1">PosiLove Consent Engine™</p>
+                            </div>
+                        ) : (
+                            <div
+                                onClick={() => setIsPhotoRevealed(!isPhotoRevealed)}
+                                className="cursor-pointer group relative overflow-hidden rounded-2xl rounded-bl-sm border-2 border-white shadow-md transition-all duration-500"
+                            >
+                                <div className={clsx(
+                                    "relative w-48 h-64 bg-gray-200 transition-all duration-700 ease-in-out",
+                                    !isPhotoRevealed && "blur-xl scale-110 opacity-80"
+                                )}>
+                                    <img
+                                        src="https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    {!isPhotoRevealed && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                            <span className="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md border border-white/20">
+                                                Tap to Reveal
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <p className="text-[10px] text-center text-gray-400 py-1">PosiLove Consent Engine™</p>
-                        </div>
+                        )}
                     </div>
 
                     {/* Received Bubble */}
@@ -112,7 +157,6 @@ export default function MessagesPage() {
                             Ready to share more? Start Guided Disclosure
                         </button>
                     </div>
-
 
                 </main>
 

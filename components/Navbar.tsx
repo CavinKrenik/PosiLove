@@ -27,7 +27,7 @@ export default function Navbar() {
                     <div className="relative w-9 h-9 flex items-center justify-center">
                         {/* Fallback to text icon if image fails, but try image first */}
                         <img
-                            src="/APP_ICON.png"
+                            src="/512.png"
                             alt="PosiLove"
                             className="w-full h-full object-contain"
                             onError={(e) => {
@@ -43,6 +43,9 @@ export default function Navbar() {
                     </div>
                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-posi-pink to-posi-coral tracking-tight">
                         PosiLove
+                    </span>
+                    <span className="ml-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-posi-gold to-posi-coral text-[10px] font-bold text-black shadow-sm">
+                        Alpha Preview
                     </span>
                 </Link>
 

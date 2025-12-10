@@ -25,16 +25,13 @@ body {
   font-family: var(--font-sans), sans-serif;
   min-height: 100vh;
   /* 
-    Updated Global Background (v3):
-    - Deep dark base (#050509)
-    - Very subtle top spotlight (opacity 0.25) to avoid washing out white text
-    - Global text shadow for readability
+    Updated Global Background (v4 - Warm Dark):
+    - Linear gradient from Deep Plum (#2D1B4E) to Dark Base (#050509)
+    - Reduces eye strain and aligns with brand
   */
-  background: radial-gradient(circle at 50% -10%,
-      rgba(242, 90, 140, 0.25) 0%,
-      rgba(5, 5, 9, 1) 40%);
+  background: linear-gradient(to bottom, #2D1B4E 0%, #10051D 50%, #050509 100%);
   background-attachment: fixed;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 @layer utilities {
@@ -43,20 +40,20 @@ body {
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-posi-pink via-posi-coral to-posi-gold text-posi-plum font-bold shadow-lg shadow-posi-pink/20 hover:scale-105 hover:shadow-xl hover:shadow-posi-pink/30 hover:brightness-110 transition-all duration-300 text-shadow-none;
+    @apply bg-gradient-to-r from-posi-pink via-posi-coral to-posi-gold text-posi-plum font-bold shadow-lg shadow-posi-pink/20 hover:scale-105 hover:shadow-xl hover:shadow-posi-pink/30 hover:brightness-110 transition-all duration-300 text-shadow-none cursor-pointer;
   }
 
-  /* Glass Nav: Darker and more blurry */
+  /* Glass Nav: Darker, warmer tint */
   .glass-nav {
-    @apply bg-posi-plum/80 backdrop-blur-xl border-b border-white/5 shadow-2xl;
+    @apply bg-[#2D1B4E]/80 backdrop-blur-xl border-b border-white/5 shadow-xl;
   }
 
   .container-custom {
     @apply max-w-[1120px] mx-auto px-6 relative;
   }
 
-  /* Cards: Dark glass effect */
+  /* Cards: Refined Glassmorphism (Lighter, blurrier) */
   .card-base {
-    @apply bg-posi-plum/40 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-xl transition-all duration-300;
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl transition-all duration-300;
   }
 }
