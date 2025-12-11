@@ -4,22 +4,58 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Upload, Sparkles, Check, Shield, HandHeart, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/UserContext';
+
+const COMMUNITY_TAGS = [
+    { id: 'hiv', label: 'HIV (Undetectable)' },
+    { id: 'hsv1', label: 'HSV-1' },
+    { id: 'hsv2', label: 'HSV-2' },
+    { id: 'hpv', label: 'HPV' },
+    { id: 'hepb', label: 'Hepatitis B' },
+    { id: 'chlamydia', label: 'Chlamydia (Curable)' },
+    { id: 'gonorrhea', label: 'Gonorrhea (Curable)' },
+    { id: 'syphilis', label: 'Syphilis (Curable)' },
+    { id: 'trich', label: 'Trichomoniasis (Curable)' },
+];
 
 export default function OnboardingPage() {
     const [step, setStep] = useState(1);
     const router = useRouter();
+    const { updateProfile } = useUser();
+
+    // Form State
+    const [name, setName] = useState('');
+    const [bio, setBio] = useState('');
+    const [myTags, setMyTags] = useState<string[]>([]);
+    const [openToTags, setOpenToTags] = useState<string[]>([]);
+
+    const toggleMyTag = (tag: string) => {
+        setMyTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    };
+
+    const toggleOpenToTag = (tag: string) => {
+        setOpenToTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    };
 
     const handleNext = () => {
         if (step < 4) {
             setStep(step + 1);
         } else {
+            // Save Profile Data
+            updateProfile({
+                name: name || 'Anonymous User',
+                bio: bio || 'Just joined the community!',
+                communityTags: myTags,
+                openToTags: openToTags,
+                avatar: '' // Mock: Logic elsewhere handles avatar or initials
+            });
             router.push('/discover');
         }
     };
 
     return (
         <div className="min-h-screen pt-20 flex items-center justify-center p-4 font-sans">
-            <div className="card-base w-full max-w-lg overflow-hidden relative min-h-[550px] flex flex-col border border-white/10 backdrop-blur-xl">
+            <div className="card-base w-full max-w-lg overflow-hidden relative min-h-[600px] flex flex-col border border-white/10 backdrop-blur-xl">
 
                 {/* Progress Bar */}
                 <div className="h-1 bg-white/5 w-full">
@@ -66,40 +102,57 @@ export default function OnboardingPage() {
                                 <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/30">
                                     <Shield className="w-8 h-8 text-blue-400" />
                                 </div>
-                                <h2 className="text-2xl font-bold mb-2 text-white">Compatibility Circles</h2>
+                                <h2 className="text-2xl font-bold mb-2 text-white">Select Your Tribes</h2>
                                 <p className="text-posi-light/60 mb-6 text-sm">
-                                    Select your community circle. This is <span className="font-bold text-posi-gold">private matching data</span> only.
+                                    This data is encrypted and used for <span className="font-bold text-posi-gold">private matching only</span>.
                                 </p>
 
-                                <div className="w-full space-y-3 mb-6">
-                                    {/* Mock Selection for Group */}
-                                    <div className="p-4 border border-posi-coral bg-posi-coral/10 rounded-xl flex items-center justify-between cursor-pointer">
-                                        <div className="text-left">
-                                            <span className="text-white font-bold block">Circle A</span>
-                                            <span className="text-xs text-posi-light/70">Living with HIV (Undetectable)</span>
-                                        </div>
-                                        <Check className="w-5 h-5 text-posi-coral" />
-                                    </div>
-
-                                    <div className="p-4 border border-white/5 rounded-xl flex items-center justify-between hover:border-posi-coral/50 cursor-pointer bg-black/20 opacity-60">
-                                        <div className="text-left">
-                                            <span className="text-posi-light/80 font-bold block">Circle B</span>
-                                            <span className="text-xs text-posi-light/50">Living with HSV-1/2</span>
-                                        </div>
+                                <div className="w-full mb-6">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left mb-3">I am living with:</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {COMMUNITY_TAGS.map(tag => {
+                                            const isSelected = myTags.includes(tag.label);
+                                            return (
+                                                <button
+                                                    key={tag.id}
+                                                    onClick={() => toggleMyTag(tag.label)}
+                                                    className={`px-3 py-2 rounded-full text-xs font-bold border transition-all ${isSelected
+                                                            ? 'bg-gradient-to-r from-posi-pink to-posi-coral border-transparent text-white shadow-lg'
+                                                            : 'bg-white/5 border-white/10 text-posi-light/60 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    {tag.label}
+                                                </button>
+                                            )
+                                        })}
                                     </div>
                                 </div>
 
-                                <p className="text-sm font-bold text-posi-light/80 mb-3 self-start">I am open to meeting:</p>
-                                <div className="flex gap-2 w-full flex-wrap mb-6">
-                                    <span className="px-3 py-1 bg-posi-coral text-white rounded-full text-xs font-bold shadow-lg shadow-posi-coral/20">Circle A</span>
-                                    <span className="px-3 py-1 bg-posi-coral text-white rounded-full text-xs font-bold shadow-lg shadow-posi-coral/20">Circle B</span>
-                                    <span className="px-3 py-1 bg-white/10 text-white/40 rounded-full text-xs font-bold border border-white/5">Circle C</span>
+                                <div className="w-full mb-6">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left mb-3">I am open to meeting others with:</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {COMMUNITY_TAGS.map(tag => {
+                                            const isSelected = openToTags.includes(tag.label);
+                                            return (
+                                                <button
+                                                    key={tag.id}
+                                                    onClick={() => toggleOpenToTag(tag.label)}
+                                                    className={`px-3 py-2 rounded-full text-xs font-bold border transition-all ${isSelected
+                                                            ? 'bg-gradient-to-r from-posi-gold to-posi-coral border-transparent text-posi-plum shadow-lg'
+                                                            : 'bg-white/5 border-white/10 text-posi-light/60 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    {tag.label}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
 
                                 <div className="flex items-start gap-3 bg-blue-500/10 p-3 rounded-lg text-left border border-blue-500/20">
                                     <Lock className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0" />
                                     <p className="text-xs text-blue-200 leading-snug">
-                                        Your circle is encrypted. It determines who you see, but is NEVER displayed on your public card.
+                                        Your circles determine who you match with. This info is never public.
                                     </p>
                                 </div>
                             </motion.div>
@@ -120,9 +173,20 @@ export default function OnboardingPage() {
                                 <h2 className="text-2xl font-bold mb-2 text-white">The Real You</h2>
                                 <p className="text-posi-light/60 mb-8">Show your smile! (No health info needed here).</p>
 
-                                <input type="text" placeholder="First Name" className="w-full p-4 bg-black/20 rounded-xl mb-4 text-white border border-white/10 focus:border-posi-coral outline-none transition-colors placeholder:text-white/30" />
+                                <input
+                                    type="text"
+                                    placeholder="First Name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full p-4 bg-black/20 rounded-xl mb-4 text-white border border-white/10 focus:border-posi-coral outline-none transition-colors placeholder:text-white/30"
+                                />
 
-                                <textarea placeholder="Bio: I love hiking, painting, and..." className="w-full p-4 bg-black/20 rounded-xl mb-6 text-white border border-white/10 focus:border-posi-coral outline-none transition-colors min-h-[100px] placeholder:text-white/30" />
+                                <textarea
+                                    placeholder="Bio: I love hiking, painting, and..."
+                                    value={bio}
+                                    onChange={(e) => setBio(e.target.value)}
+                                    className="w-full p-4 bg-black/20 rounded-xl mb-6 text-white border border-white/10 focus:border-posi-coral outline-none transition-colors min-h-[100px] placeholder:text-white/30"
+                                />
                             </motion.div>
                         )}
 

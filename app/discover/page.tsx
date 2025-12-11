@@ -5,9 +5,11 @@ import { Card, Profile } from '@/components/SwipeCard';
 import { X, Heart, Star, MessageCircle, User } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/UserContext';
 
 // MOCK DATA
-// Using same mock data as before but ensuring consistent structure
 const MOCK_PROFILES: Profile[] = [
     {
         id: '1',
@@ -41,16 +43,48 @@ const MOCK_PROFILES: Profile[] = [
 
 export default function DiscoverPage() {
     const [profiles, setProfiles] = useState(MOCK_PROFILES);
-    const [lastDirection, setLastDirection] = useState<string | null>(null);
+    const { onSwipe, addMatch, currentUser } = useUser();
+    const router = useRouter();
+
+    // Match Logic State
+    const [rightSwipeCount, setRightSwipeCount] = useState(0);
+    const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
 
     const removeProfile = (id: string) => {
         setProfiles((current) => current.filter((p) => p.id !== id));
     };
 
     const handleSwipe = (direction: 'left' | 'right' | 'super', id: string) => {
-        console.log(`Swiped ${direction} on ${id}`);
-        setLastDirection(direction);
+        // Record swipe in context
+        // @ts-ignore
+        onSwipe(id, direction);
+
+        if (direction === 'right') {
+            const newCount = rightSwipeCount + 1;
+            setRightSwipeCount(newCount);
+
+            // Mock Match Logic: Trigger match on the 2nd right swipe
+            if (newCount === 2) {
+                const profile = profiles.find(p => p.id === id);
+                if (profile) {
+                    // @ts-ignore
+                    addMatch(id); // Save to context
+                    setTimeout(() => {
+                        setMatchedProfile(profile);
+                    }, 500); // Slight delay for effect
+                }
+            }
+        }
+
         setTimeout(() => removeProfile(id), 200);
+    };
+
+    const handleStartChat = () => {
+        router.push('/messages');
+    };
+
+    const closeMatchModal = () => {
+        setMatchedProfile(null);
     };
 
     return (
@@ -58,8 +92,12 @@ export default function DiscoverPage() {
 
             {/* Sub Header for Discover Controls */}
             <header className="px-6 py-4 flex justify-between items-center z-20 relative container-custom">
-                <Link href="/profile" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-posi-pink/20 hover:border-posi-pink/50 transition-all group">
-                    <User className="w-5 h-5 text-white/80 group-hover:text-posi-pink transition-colors" />
+                <Link href="/profile" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-posi-pink/20 hover:border-posi-pink/50 transition-all group overflow-hidden">
+                    {currentUser?.profile?.avatar ? (
+                        <img src={currentUser.profile.avatar} className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="w-5 h-5 text-white/80 group-hover:text-posi-pink transition-colors" />
+                    )}
                 </Link>
 
                 {/* Visual Privacy Indicator */}
@@ -85,7 +123,10 @@ export default function DiscoverPage() {
                             <h3 className="text-2xl font-bold text-white mb-2">No more profiles!</h3>
                             <p className="text-posi-light/60 mb-8 max-w-[200px]">You've seen everyone in your area inside your compatible circles.</p>
                             <button
-                                onClick={() => setProfiles(MOCK_PROFILES)} // Reset for demo
+                                onClick={() => {
+                                    setProfiles(MOCK_PROFILES);
+                                    setRightSwipeCount(0); // Reset count for demo
+                                }}
                                 className="px-8 py-3 bg-gradient-to-r from-posi-pink to-posi-coral text-white rounded-full font-bold shadow-lg shadow-posi-coral/20 hover:scale-105 transition-all"
                             >
                                 Refresh Demo
@@ -122,6 +163,66 @@ export default function DiscoverPage() {
                     <Heart className="w-8 h-8 fill-current" />
                 </button>
             </div>
+
+            {/* MATCH MODAL */}
+            <AnimatePresence>
+                {matchedProfile && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-posi-plum/90 backdrop-blur-md"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.8, y: 50 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.8, y: 50 }}
+                            className="w-full max-w-sm bg-black/40 border border-white/10 rounded-3xl p-8 flex flex-col items-center text-center relative overflow-hidden"
+                        >
+                            {/* Confetti / Sparkles Background */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-posi-pink/20 via-transparent to-posi-gold/20 pointer-events-none" />
+
+                            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-posi-gold to-posi-coral mb-2 italic transform -rotate-2">
+                                IT'S A MATCH!
+                            </h2>
+                            <p className="text-white/80 mb-8 font-medium">You and {matchedProfile.name} dig each other.</p>
+
+                            <div className="flex items-center justify-center gap-4 mb-10 w-full relative">
+                                {/* My Photo (Placeholder/Mock) */}
+                                <div className="w-24 h-24 rounded-full border-4 border-posi-plum overflow-hidden z-10 shadow-xl relative -mr-4 transform -rotate-6">
+                                    <img
+                                        src={currentUser?.profile.avatar || "/512.png"}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                {/* Their Photo */}
+                                <div className="w-24 h-24 rounded-full border-4 border-posi-plum overflow-hidden z-20 shadow-xl transform rotate-6 scale-110 border-posi-gold/50">
+                                    <img
+                                        src={matchedProfile.photos[0]}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleStartChat}
+                                className="w-full btn-primary py-4 rounded-xl text-lg font-bold mb-3 shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2"
+                            >
+                                <MessageCircle className="w-5 h-5" /> Say Hello
+                            </button>
+
+                            <button
+                                onClick={closeMatchModal}
+                                className="text-white/60 font-semibold hover:text-white transition-colors text-sm"
+                            >
+                                Keep Swiping
+                            </button>
+
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 }
