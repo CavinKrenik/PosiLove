@@ -6,17 +6,6 @@ import { useState, useEffect } from 'react';
 
 const STI_DATA = [
     {
-        category: "Bacterial STIs (Often Curable)",
-        color: "text-posi-gold",
-        items: [
-            { name: "Chlamydia", desc: "Very common, often asymptomatic." },
-            { name: "Gonorrhea", desc: "Can affect genitals, rectum, throat; resistance is a concern." },
-            { name: "Syphilis", desc: "Progresses in stages, can be serious if untreated." },
-            { name: "Mycoplasma genitalium (Mgen)", desc: "A newer bacterial STI." },
-            { name: "Chancroid", desc: "Causes painful genital sores." }
-        ]
-    },
-    {
         category: "Viral STIs (Manageable, Often Lifelong)",
         color: "text-posi-pink",
         items: [
@@ -25,15 +14,6 @@ const STI_DATA = [
             { name: "HPV", desc: "Can cause genital warts or cancer; vaccines available." },
             { name: "Hepatitis B & C", desc: "Affects the liver; Hep B vaccine exists." },
             { name: "Mpox", desc: "Outbreaks have shown sexual transmission." }
-        ]
-    },
-    {
-        category: "Parasitic STIs (Often Curable)",
-        color: "text-posi-coral",
-        items: [
-            { name: "Trichomoniasis", desc: "Common, caused by a parasite." },
-            { name: "Pubic Lice (Crabs)", desc: "Tiny insects in the pubic hair area." },
-            { name: "Scabies", desc: "Mites causing intense itching." }
         ]
     }
 ];

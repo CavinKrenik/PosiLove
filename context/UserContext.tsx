@@ -9,6 +9,8 @@ export interface UserProfile {
     bio: string;
     communityTags: string[]; // "Tribes"
     openToTags: string[];    // "I'm Open To"
+    gender: 'male' | 'female' | 'non-binary';
+    lookingFor: 'men' | 'women' | 'everyone';
 }
 
 export interface User {
@@ -44,7 +46,9 @@ const DEFAULT_USER: User = {
         avatar: '', // Empty initially, will use initials
         bio: 'Ready to find my community.',
         communityTags: [],
-        openToTags: []
+        openToTags: [],
+        gender: 'non-binary',
+        lookingFor: 'everyone'
     }
 };
 
@@ -154,7 +158,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             updateProfile,
             onSwipe,
             resetDemo,
-            // @ts-ignore - Adding extra helper for demo logic
             addMatch
         }}>
             {children}

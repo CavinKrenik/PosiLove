@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Upload, Sparkles, Check, Shield, HandHeart, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/context/UserContext';
+import { useUser, UserProfile } from '@/context/UserContext';
+import clsx from 'clsx';
 
 const COMMUNITY_TAGS = [
     { id: 'hiv', label: 'HIV (Undetectable)' },
@@ -12,10 +13,6 @@ const COMMUNITY_TAGS = [
     { id: 'hsv2', label: 'HSV-2' },
     { id: 'hpv', label: 'HPV' },
     { id: 'hepb', label: 'Hepatitis B' },
-    { id: 'chlamydia', label: 'Chlamydia (Curable)' },
-    { id: 'gonorrhea', label: 'Gonorrhea (Curable)' },
-    { id: 'syphilis', label: 'Syphilis (Curable)' },
-    { id: 'trich', label: 'Trichomoniasis (Curable)' },
 ];
 
 export default function OnboardingPage() {
@@ -28,6 +25,9 @@ export default function OnboardingPage() {
     const [bio, setBio] = useState('');
     const [myTags, setMyTags] = useState<string[]>([]);
     const [openToTags, setOpenToTags] = useState<string[]>([]);
+    const [gender, setGender] = useState<UserProfile['gender']>('non-binary');
+    const [lookingFor, setLookingFor] = useState<UserProfile['lookingFor']>('everyone');
+    const [nameError, setNameError] = useState('');
 
     const toggleMyTag = (tag: string) => {
         setMyTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
@@ -37,7 +37,22 @@ export default function OnboardingPage() {
         setOpenToTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
     };
 
+    const handleNameChange = (val: string) => {
+        // Enforce First Name Only (no spaces)
+        if (val.includes(' ')) {
+            setNameError('First name only to protect your privacy.');
+            // Trim space if user tried to type it
+            setName(val.replace(/\s/g, ''));
+        } else {
+            setNameError('');
+            setName(val);
+        }
+    };
+
     const handleNext = () => {
+        if (step === 3 && nameError) {
+            return; // Don't proceed if error
+        }
         if (step < 4) {
             setStep(step + 1);
         } else {
@@ -47,7 +62,9 @@ export default function OnboardingPage() {
                 bio: bio || 'Just joined the community!',
                 communityTags: myTags,
                 openToTags: openToTags,
-                avatar: '' // Mock: Logic elsewhere handles avatar or initials
+                avatar: '', // Mock: Logic elsewhere handles avatar or initials
+                gender: gender,
+                lookingFor: lookingFor
             });
             router.push('/discover');
         }
@@ -90,7 +107,7 @@ export default function OnboardingPage() {
                             </motion.div>
                         )}
 
-                        {/* STEP 2: COMPATIBILITY CIRCLES (PRIVACY) */}
+                        {/* STEP 2: COMPATIBILITY CIRCLES (PRIVACY) & GENDER */}
                         {step === 2 && (
                             <motion.div
                                 key="step2"
@@ -102,10 +119,52 @@ export default function OnboardingPage() {
                                 <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/30">
                                     <Shield className="w-8 h-8 text-blue-400" />
                                 </div>
-                                <h2 className="text-2xl font-bold mb-2 text-white">Select Your Tribes</h2>
+                                <h2 className="text-2xl font-bold mb-2 text-white">Who Are You?</h2>
                                 <p className="text-posi-light/60 mb-6 text-sm">
                                     This data is encrypted and used for <span className="font-bold text-posi-gold">private matching only</span>.
                                 </p>
+
+                                {/* Gender Identity */}
+                                <div className="w-full mb-6">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left mb-3">I Identify As:</h3>
+                                    <div className="flex gap-2">
+                                        {(['male', 'female', 'non-binary'] as const).map(g => (
+                                            <button
+                                                key={g}
+                                                onClick={() => setGender(g)}
+                                                className={clsx(
+                                                    "flex-1 py-3 rounded-xl border text-sm font-semibold transition-all",
+                                                    gender === g
+                                                        ? 'bg-gradient-to-br from-posi-pink to-posi-plum border-posi-pink text-white shadow-lg'
+                                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                                )}
+                                            >
+                                                {g === 'non-binary' ? 'Non-Binary' : g.charAt(0).toUpperCase() + g.slice(1)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Looking For */}
+                                <div className="w-full mb-6">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left mb-3">Looking For:</h3>
+                                    <div className="flex gap-2">
+                                        {(['men', 'women', 'everyone'] as const).map(l => (
+                                            <button
+                                                key={l}
+                                                onClick={() => setLookingFor(l)}
+                                                className={clsx(
+                                                    "flex-1 py-3 rounded-xl border text-sm font-semibold transition-all",
+                                                    lookingFor === l
+                                                        ? 'bg-gradient-to-br from-posi-gold to-posi-coral border-posi-gold text-white shadow-lg'
+                                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                                )}
+                                            >
+                                                {l.charAt(0).toUpperCase() + l.slice(1)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
                                 <div className="w-full mb-6">
                                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left mb-3">I am living with:</h3>
@@ -117,29 +176,8 @@ export default function OnboardingPage() {
                                                     key={tag.id}
                                                     onClick={() => toggleMyTag(tag.label)}
                                                     className={`px-3 py-2 rounded-full text-xs font-bold border transition-all ${isSelected
-                                                            ? 'bg-gradient-to-r from-posi-pink to-posi-coral border-transparent text-white shadow-lg'
-                                                            : 'bg-white/5 border-white/10 text-posi-light/60 hover:bg-white/10'
-                                                        }`}
-                                                >
-                                                    {tag.label}
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div className="w-full mb-6">
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left mb-3">I am open to meeting others with:</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {COMMUNITY_TAGS.map(tag => {
-                                            const isSelected = openToTags.includes(tag.label);
-                                            return (
-                                                <button
-                                                    key={tag.id}
-                                                    onClick={() => toggleOpenToTag(tag.label)}
-                                                    className={`px-3 py-2 rounded-full text-xs font-bold border transition-all ${isSelected
-                                                            ? 'bg-gradient-to-r from-posi-gold to-posi-coral border-transparent text-posi-plum shadow-lg'
-                                                            : 'bg-white/5 border-white/10 text-posi-light/60 hover:bg-white/10'
+                                                        ? 'bg-gradient-to-r from-posi-pink to-posi-coral border-transparent text-white shadow-lg'
+                                                        : 'bg-white/5 border-white/10 text-posi-light/60 hover:bg-white/10'
                                                         }`}
                                                 >
                                                     {tag.label}
@@ -173,13 +211,21 @@ export default function OnboardingPage() {
                                 <h2 className="text-2xl font-bold mb-2 text-white">The Real You</h2>
                                 <p className="text-posi-light/60 mb-8">Show your smile! (No health info needed here).</p>
 
-                                <input
-                                    type="text"
-                                    placeholder="First Name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full p-4 bg-black/20 rounded-xl mb-4 text-white border border-white/10 focus:border-posi-coral outline-none transition-colors placeholder:text-white/30"
-                                />
+                                <div className="w-full relative mb-4">
+                                    <input
+                                        type="text"
+                                        placeholder="First Name (No last names allowed)"
+                                        value={name}
+                                        onChange={(e) => handleNameChange(e.target.value)}
+                                        className={clsx(
+                                            "w-full p-4 bg-black/20 rounded-xl text-white border outline-none transition-colors placeholder:text-white/30",
+                                            nameError ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-posi-coral"
+                                        )}
+                                    />
+                                    {nameError && (
+                                        <p className="text-red-400 text-xs mt-1 text-left pl-1">{nameError}</p>
+                                    )}
+                                </div>
 
                                 <textarea
                                     placeholder="Bio: I love hiking, painting, and..."
@@ -230,6 +276,7 @@ export default function OnboardingPage() {
                     <button
                         onClick={handleNext}
                         className="btn-primary w-full py-4 rounded-xl text-lg flex items-center justify-center gap-2"
+                        disabled={!!nameError && step === 3}
                     >
                         {step === 4 ? "I Agree - Join Community" : "Continue"}
                         <ChevronRight className="w-5 h-5" />

@@ -17,11 +17,15 @@ model User {
   id            String    @id @default(uuid())
   email         String    @unique
   password_hash String
+  firstName     String    // First Name Only for privacy
+  
   geo_location  String?   // "lat,long"
   bio           String?
   age           Int?
-  gender        String?
-  preferences   String?   // JSON stringified or supported JSON type if supported by DB (SQLite handles string mostly)
+  gender        String?   // User's gender
+  genderPreference String? // "Male", "Female", or "Everyone"
+  
+  preferences   String?   // JSON stringified 
   isPremium     Boolean   @default(true)
   
   profile       Profile?

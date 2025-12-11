@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, Profile } from '@/components/SwipeCard';
 import { X, Heart, Star, MessageCircle, User } from 'lucide-react';
 import Link from 'next/link';
@@ -10,7 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 
 // MOCK DATA
-const MOCK_PROFILES: Profile[] = [
+// Extended with gender for filtering
+const MOCK_PROFILES: (Profile & { gender: 'male' | 'female' | 'non-binary' })[] = [
     {
         id: '1',
         name: 'Sarah',
@@ -19,7 +20,8 @@ const MOCK_PROFILES: Profile[] = [
         photos: ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80'],
         interests: ['Hiking', 'Coffee', 'Photography'],
         distance: 3,
-        isPremium: true
+        isPremium: true,
+        gender: 'female'
     },
     {
         id: '2',
@@ -28,7 +30,8 @@ const MOCK_PROFILES: Profile[] = [
         bio: 'Art director by day, gamer by night. Lets 1v1? 🎮🎨',
         photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80'],
         interests: ['Gaming', 'Art', 'Design'],
-        distance: 12
+        distance: 12,
+        gender: 'female'
     },
     {
         id: '3',
@@ -37,14 +40,62 @@ const MOCK_PROFILES: Profile[] = [
         bio: 'Just moved to the city! Love trying new restaurants and museums.',
         photos: ['https://images.unsplash.com/photo-1524504388940-b1c1722653e1?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80'],
         interests: ['Foodie', 'Museums', 'Travel'],
-        distance: 5
+        distance: 5,
+        gender: 'female'
+    },
+    {
+        id: '4',
+        name: 'James',
+        age: 26,
+        bio: 'Musician and dog lover. Ask me about my golden retriever! 🐕🎸',
+        photos: ['https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80'],
+        interests: ['Music', 'Dogs', 'Concerts'],
+        distance: 8,
+        gender: 'male'
+    },
+    {
+        id: '5',
+        name: 'Alex',
+        age: 25,
+        bio: 'Techie who loves the outdoors. Always down for a camping trip. ⛺💻',
+        photos: ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80'],
+        interests: ['Coding', 'Camping', 'Tech'],
+        distance: 4,
+        gender: 'non-binary'
     }
 ];
 
 export default function DiscoverPage() {
-    const [profiles, setProfiles] = useState(MOCK_PROFILES);
     const { onSwipe, addMatch, currentUser } = useUser();
     const router = useRouter();
+
+    // Init state with filtered profiles? 
+    // We need to filter based on currentUser preference efficiently.
+    // Since currentUser might load from localStorage, let's use an effect or useMemo to initialize profiles once.
+    // However, for this mock engine, we can just filter MOCK_PROFILES directly on load.
+
+    const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    // Initial Load & Filter Logic
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const lookingFor = currentUser.profile.lookingFor || 'everyone'; // Default fallback
+
+        let filtered = MOCK_PROFILES;
+
+        if (lookingFor === 'women') {
+            filtered = MOCK_PROFILES.filter(p => p.gender === 'female');
+        } else if (lookingFor === 'men') {
+            filtered = MOCK_PROFILES.filter(p => p.gender === 'male');
+        }
+        // 'everyone' keeps all
+
+        setProfiles(filtered);
+        setIsLoaded(true);
+    }, [currentUser?.profile.lookingFor]);
+
 
     // Match Logic State
     const [rightSwipeCount, setRightSwipeCount] = useState(0);
@@ -60,24 +111,28 @@ export default function DiscoverPage() {
         onSwipe(id, direction);
 
         if (direction === 'right') {
-            const newCount = rightSwipeCount + 1;
-            setRightSwipeCount(newCount);
-
-            // Mock Match Logic: Trigger match on the 2nd right swipe
-            if (newCount === 2) {
-                const profile = profiles.find(p => p.id === id);
-                if (profile) {
-                    // @ts-ignore
-                    addMatch(id); // Save to context
-                    setTimeout(() => {
-                        setMatchedProfile(profile);
-                    }, 500); // Slight delay for effect
-                }
-            }
+            onRightSwipe(id);
         }
 
         setTimeout(() => removeProfile(id), 200);
     };
+
+    const onRightSwipe = (id: string) => {
+        const newCount = rightSwipeCount + 1;
+        setRightSwipeCount(newCount);
+
+        // Mock Match Logic: Trigger match on the 2nd right swipe
+        if (newCount === 2) {
+            const profile = profiles.find(p => p.id === id);
+            if (profile) {
+                // @ts-ignore
+                addMatch(id); // Save to context
+                setTimeout(() => {
+                    setMatchedProfile(profile);
+                }, 500); // Slight delay for effect
+            }
+        }
+    }
 
     const handleStartChat = () => {
         router.push('/messages');
@@ -86,6 +141,13 @@ export default function DiscoverPage() {
     const closeMatchModal = () => {
         setMatchedProfile(null);
     };
+
+    const resetDemoFilters = () => {
+        setProfiles(MOCK_PROFILES); // Reset to all
+        setRightSwipeCount(0);
+    }
+
+    if (!isLoaded) return <div className="min-h-screen bg-posi-dark animate-pulse" />;
 
     return (
         <div className="min-h-screen pt-16 flex flex-col font-sans relative overflow-hidden">
@@ -103,7 +165,9 @@ export default function DiscoverPage() {
                 {/* Visual Privacy Indicator */}
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-posi-plum/40 backdrop-blur-md rounded-full border border-posi-pink/20 shadow-sm">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
-                    <span className="text-[10px] text-posi-light/90 font-bold tracking-widest uppercase">Encrypted Compatibility</span>
+                    <span className="text-[10px] text-posi-light/90 font-bold tracking-widest uppercase">
+                        Compatibility: {currentUser?.profile.lookingFor === 'everyone' ? 'All' : currentUser?.profile.lookingFor === 'men' ? 'Men' : 'Women'}
+                    </span>
                 </div>
 
                 <Link href="/messages" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-posi-pink/20 hover:border-posi-pink/50 transition-all group">
@@ -121,15 +185,12 @@ export default function DiscoverPage() {
                                 <img src="/APP_ICON.png" className="w-12 h-12 relative opacity-80" onError={(e) => e.currentTarget.src = '/512.png'} />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">No more profiles!</h3>
-                            <p className="text-posi-light/60 mb-8 max-w-[200px]">You've seen everyone in your area inside your compatible circles.</p>
+                            <p className="text-posi-light/60 mb-8 max-w-[200px]">You've seen everyone matching your preferences.</p>
                             <button
-                                onClick={() => {
-                                    setProfiles(MOCK_PROFILES);
-                                    setRightSwipeCount(0); // Reset count for demo
-                                }}
+                                onClick={resetDemoFilters}
                                 className="px-8 py-3 bg-gradient-to-r from-posi-pink to-posi-coral text-white rounded-full font-bold shadow-lg shadow-posi-coral/20 hover:scale-105 transition-all"
                             >
-                                Refresh Demo
+                                Show All (Demo)
                             </button>
                         </div>
                     ) : (
